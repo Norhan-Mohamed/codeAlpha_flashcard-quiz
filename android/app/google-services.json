@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "152001766682",
+    "project_id": "flashcard-quiz-f67c2",
+    "storage_bucket": "flashcard-quiz-f67c2.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:152001766682:android:6ae38ce030d136c9bd78a3",
+        "android_client_info": {
+          "package_name": "com.example.flashcardquizapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAvCSsxzvpBqnvtv_bbh_iLIuj8wjGo9UQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
