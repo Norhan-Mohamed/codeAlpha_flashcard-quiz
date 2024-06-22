@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../constant/colors.dart';
 import '../data/flashcard_data.dart';
 import '../models/flashcard.dart';
 
@@ -39,6 +40,7 @@ class _FlashcardFormScreenState extends State<FlashcardFormScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        elevation: 1,
         title:
             Text(widget.flashcard == null ? 'Add Flashcard' : 'Edit Flashcard'),
       ),
@@ -46,13 +48,38 @@ class _FlashcardFormScreenState extends State<FlashcardFormScreen> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            TextField(
+            TextFormField(
               controller: _questionController,
-              decoration: InputDecoration(labelText: 'Question'),
+              decoration: InputDecoration(
+                labelText: 'Question',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10.0),
+                  borderSide: BorderSide(color: Colors.blue.shade200),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10.0),
+                  borderSide: BorderSide(color: constantColors.SoftBlue),
+                ),
+                filled: true,
+                fillColor: Colors.blue.shade50,
+              ),
             ),
-            TextField(
+            SizedBox(height: 12.0),
+            TextFormField(
               controller: _answerController,
-              decoration: InputDecoration(labelText: 'Answer'),
+              decoration: InputDecoration(
+                labelText: 'Answer',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10.0),
+                  borderSide: BorderSide(color: Colors.blue.shade200),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10.0),
+                  borderSide: BorderSide(color: constantColors.SoftBlue),
+                ),
+                filled: true,
+                fillColor: Colors.blue.shade50,
+              ),
             ),
             SizedBox(height: 20.0),
             ElevatedButton(
@@ -76,9 +103,16 @@ class _FlashcardFormScreenState extends State<FlashcardFormScreen> {
                 }
                 Navigator.pop(context);
               },
-              child: Text(widget.flashcard == null
-                  ? 'Add Flashcard'
-                  : 'Update Flashcard'),
+              child: Text(
+                widget.flashcard == null ? 'Add Flashcard' : 'Update Flashcard',
+                style: TextStyle(color: constantColors.LightGray),
+              ),
+              style: ElevatedButton.styleFrom(
+                padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30.0),
+                ),
+              ),
             ),
           ],
         ),

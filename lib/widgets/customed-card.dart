@@ -2,6 +2,8 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
+import '../constant/colors.dart';
+
 class FlipCard extends StatefulWidget {
   final String frontTitle;
   final String frontSubtitle;
@@ -58,7 +60,7 @@ class _FlipCardState extends State<FlipCard> {
                 key: ValueKey(true),
                 title: widget.backTitle,
                 subtitle: widget.backSubtitle,
-                color: Colors.blue,
+                color: constantColors.SoftBlue,
                 onEdit: widget.onEdit,
                 onDelete: widget.onDelete,
               )
@@ -66,7 +68,7 @@ class _FlipCardState extends State<FlipCard> {
                 key: ValueKey(false),
                 title: widget.frontTitle,
                 subtitle: widget.frontSubtitle,
-                color: Colors.red,
+                color: constantColors.LightGray,
                 onEdit: widget.onEdit,
                 onDelete: widget.onDelete,
               ),
@@ -100,17 +102,17 @@ class CardContent extends StatelessWidget {
           ListTile(
             title: Text(
               title,
-              style: TextStyle(color: Colors.white, fontSize: 20),
+              style: TextStyle(color: constantColors.White, fontSize: 20),
             ),
             subtitle: Text(
               subtitle,
-              style: TextStyle(color: Colors.white, fontSize: 16),
+              style: TextStyle(color: constantColors.White, fontSize: 16),
             ),
           ),
           ButtonBar(
             children: [
               IconButton(
-                icon: Icon(Icons.edit, color: Colors.white),
+                icon: Icon(Icons.edit, color: constantColors.White),
                 onPressed: onEdit,
               ),
               IconButton(

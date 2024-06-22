@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../constant/colors.dart';
 import '../data/flashcard_data.dart';
 import '../widgets/flashcard_tile.dart';
 import 'flashcard_form_screen.dart';
@@ -11,7 +12,11 @@ class FlashcardListScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Flashcards'),
+        title: Text(
+          'Flashcards',
+          style: TextStyle(fontWeight: FontWeight.w500),
+        ),
+        centerTitle: true,
         actions: [
           IconButton(
             icon: Icon(Icons.quiz),
@@ -40,6 +45,8 @@ class FlashcardListScreen extends StatelessWidget {
         },
       ),
       floatingActionButton: FloatingActionButton(
+        backgroundColor: constantColors.PaleYellow,
+        foregroundColor: constantColors.LightGray,
         child: Icon(Icons.add),
         onPressed: () {
           Navigator.push(
