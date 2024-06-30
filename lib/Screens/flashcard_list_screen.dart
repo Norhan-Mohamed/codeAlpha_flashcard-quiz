@@ -44,17 +44,31 @@ class FlashcardListScreen extends StatelessWidget {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: constantColors.PaleYellow,
-        foregroundColor: constantColors.LightGray,
-        child: Icon(Icons.add),
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => FlashcardFormScreen()),
-          );
-        },
-      ),
+  floatingActionButton: Container(
+    decoration: BoxDecoration(
+    shape: BoxShape.circle,
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.5), // Darker shadow color
+          spreadRadius: 3,
+          blurRadius: 10,
+          offset: Offset(0, 5), // Shadow position
+        ),
+      ],
+    ),
+    child: FloatingActionButton(
+    backgroundColor: constantColors.SoftBlue,
+    foregroundColor: constantColors.Black,
+    child: Icon(Icons.add),
+    onPressed: () {
+    Navigator.push(
+    context,
+    MaterialPageRoute(builder: (context) => FlashcardFormScreen()),
+    );
+    },
+    ),
+    ),
+
     );
   }
 }

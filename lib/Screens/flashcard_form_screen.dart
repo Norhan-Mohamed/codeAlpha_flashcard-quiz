@@ -8,7 +8,7 @@ import '../models/flashcard.dart';
 class FlashcardFormScreen extends StatefulWidget {
   final Flashcard? flashcard;
 
-  FlashcardFormScreen({this.flashcard});
+  const FlashcardFormScreen({super.key, this.flashcard});
 
   @override
   _FlashcardFormScreenState createState() => _FlashcardFormScreenState();
@@ -58,13 +58,13 @@ class _FlashcardFormScreenState extends State<FlashcardFormScreen> {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10.0),
-                  borderSide: BorderSide(color: constantColors.SoftBlue),
+                  borderSide: const BorderSide(color: constantColors.SoftBlue),
                 ),
                 filled: true,
                 fillColor: Colors.blue.shade50,
               ),
             ),
-            SizedBox(height: 12.0),
+            const SizedBox(height: 12.0),
             TextFormField(
               controller: _answerController,
               decoration: InputDecoration(
@@ -75,13 +75,13 @@ class _FlashcardFormScreenState extends State<FlashcardFormScreen> {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10.0),
-                  borderSide: BorderSide(color: constantColors.SoftBlue),
+                  borderSide: const BorderSide(color: constantColors.SoftBlue),
                 ),
                 filled: true,
                 fillColor: Colors.blue.shade50,
               ),
             ),
-            SizedBox(height: 20.0),
+            const SizedBox(height: 20.0),
             ElevatedButton(
               onPressed: () async {
                 if (widget.flashcard == null) {
@@ -103,17 +103,22 @@ class _FlashcardFormScreenState extends State<FlashcardFormScreen> {
                 }
                 Navigator.pop(context);
               },
-              child: Text(
-                widget.flashcard == null ? 'Add Flashcard' : 'Update Flashcard',
-                style: TextStyle(color: constantColors.LightGray),
-              ),
               style: ElevatedButton.styleFrom(
-                padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(30.0),
+                  side: BorderSide(
+                    color: constantColors.Black,
+                    width: 1.0, // Adjust the width to make the border thin
+                  ),
                 ),
               ),
+              child: Text(
+                widget.flashcard == null ? 'Add Flashcard' : 'Update Flashcard',
+                style: const TextStyle(color: constantColors.Black),
+              ),
             ),
+
           ],
         ),
       ),

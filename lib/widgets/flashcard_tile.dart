@@ -10,7 +10,7 @@ class FlashcardTile extends StatelessWidget {
   final Flashcard flashcard;
   final int index;
 
-  FlashcardTile({required this.flashcard, required this.index});
+  const FlashcardTile({super.key, required this.flashcard, required this.index});
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +34,7 @@ class FlashcardTile extends StatelessWidget {
           await Provider.of<FlashcardData>(context, listen: false)
               .deleteFlashcard(flashcard.id);
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            const SnackBar(
               content: Text('Flashcard deleted successfully'),
             ),
           );

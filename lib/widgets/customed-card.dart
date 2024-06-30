@@ -102,21 +102,21 @@ class CardContent extends StatelessWidget {
           ListTile(
             title: Text(
               title,
-              style: TextStyle(color: constantColors.White, fontSize: 20),
+              style: TextStyle(color: constantColors.Black, fontSize: 20),
             ),
             subtitle: Text(
               subtitle,
-              style: TextStyle(color: constantColors.White, fontSize: 16),
+              style: TextStyle(color: constantColors.Black, fontSize: 16),
             ),
           ),
           ButtonBar(
             children: [
               IconButton(
-                icon: Icon(Icons.edit, color: constantColors.White),
+                icon: Icon(Icons.edit, color: constantColors.Black),
                 onPressed: onEdit,
               ),
               IconButton(
-                icon: Icon(Icons.delete, color: Colors.white),
+                icon: Icon(Icons.delete, color: constantColors.Black),
                 onPressed: onDelete,
               ),
             ],
