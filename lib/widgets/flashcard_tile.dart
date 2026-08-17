@@ -1,22 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../Screens/flashcard_form_screen.dart';
 import '../data/flashcard_data.dart';
 import '../models/flashcard.dart';
-import 'customed-card.dart';
+import '../screens/flashcard_form_screen.dart';
+import 'flip_card.dart';
 
 class FlashcardTile extends StatelessWidget {
   final Flashcard flashcard;
-  final int index;
 
-  const FlashcardTile({super.key, required this.flashcard, required this.index});
+  const FlashcardTile({super.key, required this.flashcard});
 
   @override
   Widget build(BuildContext context) {
-//
-// final flashcardId = Provider.of<FlashcardData>(context).flashcards[index];
-
     return FlipCard(
       frontTitle: 'Question',
       frontSubtitle: flashcard.question,
@@ -30,53 +26,50 @@ class FlashcardTile extends StatelessWidget {
           ),
         );
       },
-      onDelete: () async {
-        try {
-          await Provider.of<FlashcardData>(context, listen: false)
-              .deleteFlashcard(flashcard.id);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Flashcard deleted successfully'),
+      onDelete: () => _confirmDelete(context),
+    );
+  }
+
+  Future<void> _confirmDelete(BuildContext context) async {
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Delete flashcard?'),
+          content: const Text('This action cannot be undone.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
             ),
-          );
-        } catch (e) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Failed to delete flashcard: $e'),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Delete'),
             ),
-          );
-        }
+          ],
+        );
       },
+    );
+
+    if (shouldDelete != true || !context.mounted) {
+      return;
+    }
+
+    final messenger = ScaffoldMessenger.of(context);
+    final success = await context.read<FlashcardData>().deleteFlashcard(flashcard.id);
+
+    if (!context.mounted) {
+      return;
+    }
+
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(
+          success
+              ? 'Flashcard deleted successfully'
+              : 'Failed to delete flashcard. Please try again.',
+        ),
+      ),
     );
   }
 }
-
-/*
-ListTile(
-title: Text(flashcard.question),
-subtitle: Text(flashcard.answer),
-trailing: Row(
-mainAxisSize: MainAxisSize.min,
-children: [
-IconButton(
-icon: Icon(Icons.edit),
-onPressed: () {
-Navigator.push(
-context,
-MaterialPageRoute(
-builder: (context) => FlashcardFormScreen(
-id: flashcardId.toString(), flashcard: flashcard),
-),
-);
-},
-),
-IconButton(
-icon: Icon(Icons.delete),
-onPressed: () {
-Provider.of<FlashcardData>(context, listen: false)
-    .deleteFlashcard(flashcardId as String);
-},
-),
-],
-),
-*/

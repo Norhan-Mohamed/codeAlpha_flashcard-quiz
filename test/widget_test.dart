@@ -1,30 +1,51 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
+import 'package:flashcardquizapp/data/flashcard_data.dart';
+import 'package:flashcardquizapp/main.dart';
+import 'package:flashcardquizapp/models/flashcard.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:flashcardquizapp/main.dart';
-
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  test('Flashcard.toMap stores question and answer', () {
+    const card = Flashcard(
+      id: '1',
+      question: 'Capital of France?',
+      answer: 'Paris',
+    );
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    expect(card.toMap(), {
+      'question': 'Capital of France?',
+      'answer': 'Paris',
+    });
+  });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+  testWidgets('shows empty state when there are no flashcards', (tester) async {
+    await tester.pumpWidget(
+      FlashcardQuizApp(
+        flashcardData: FlashcardData.forTesting(),
+      ),
+    );
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(find.text('Start your deck'), findsOneWidget);
+    expect(find.textContaining('Create your first flashcard'), findsOneWidget);
+  });
+
+  testWidgets('shows flashcard question on the list', (tester) async {
+    await tester.pumpWidget(
+      FlashcardQuizApp(
+        flashcardData: FlashcardData.forTesting(
+          flashcards: const [
+            Flashcard(
+              id: '1',
+              question: 'What is 2 + 2?',
+              answer: '4',
+            ),
+          ],
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    expect(find.text('What is 2 + 2?'), findsOneWidget);
+    expect(find.text('QUESTION'), findsWidgets);
   });
 }

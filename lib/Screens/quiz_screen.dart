@@ -1,62 +1,199 @@
-import 'package:flutter/cupertino.dart';
+import 'dart:math';
+
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
-import '../constant/colors.dart';
 import '../data/flashcard_data.dart';
+import '../models/flashcard.dart';
+import '../theme/app_colors.dart';
+import '../widgets/app_background.dart';
 
 class QuizScreen extends StatefulWidget {
   const QuizScreen({super.key});
 
   @override
-  _QuizScreenState createState() => _QuizScreenState();
+  State<QuizScreen> createState() => _QuizScreenState();
 }
 
 class _QuizScreenState extends State<QuizScreen> {
+  final TextEditingController _controller = TextEditingController();
+  final List<String> _wrongAnswers = [];
+
+  List<Flashcard> _quizCards = [];
   int _currentIndex = 0;
   int _score = 0;
   bool _showAnswer = false;
-  final TextEditingController _controller = TextEditingController();
-  List<String> _wrongAnswers = [];
+  bool _ready = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      final cards = context.read<FlashcardData>().flashcards;
+      setState(() {
+        if (cards.isNotEmpty) {
+          _startQuiz(cards);
+        }
+        _ready = true;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _startQuiz(List<Flashcard> source) {
+    _quizCards = List<Flashcard>.from(source)..shuffle(Random());
+    _currentIndex = 0;
+    _score = 0;
+    _showAnswer = false;
+    _wrongAnswers.clear();
+    _controller.clear();
+  }
+
+  void _submitAnswer() {
+    if (_quizCards.isEmpty) {
+      return;
+    }
+
+    final current = _quizCards[_currentIndex];
+    final isCorrect = _controller.text.trim().toLowerCase() ==
+        current.answer.trim().toLowerCase();
+
+    setState(() {
+      if (isCorrect) {
+        _score++;
+      } else {
+        _wrongAnswers.add(
+          '${current.question}\nCorrect answer: ${current.answer}',
+        );
+      }
+
+      _controller.clear();
+      _showAnswer = false;
+
+      if (_currentIndex < _quizCards.length - 1) {
+        _currentIndex++;
+      } else {
+        _showResultDialog();
+      }
+    });
+  }
+
+  void _showResultDialog() {
+    final perfect = _score == _quizCards.length;
+
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text(perfect ? 'Perfect run!' : 'Quiz completed'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    gradient: perfect ? AppColors.brandWave : null,
+                    color: perfect ? null : AppColors.mint.withValues(alpha: 0.55),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Text(
+                    'Score: $_score / ${_quizCards.length}',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.fredoka(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w600,
+                      color: perfect ? AppColors.white : AppColors.ink,
+                    ),
+                  ),
+                ),
+                if (_wrongAnswers.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  Text(
+                    'Review',
+                    style: GoogleFonts.nunito(fontWeight: FontWeight.w800),
+                  ),
+                  const SizedBox(height: 8),
+                  ..._wrongAnswers.map(
+                    (answer) => Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: Text(
+                        answer,
+                        style: GoogleFonts.nunito(height: 1.35),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                Navigator.of(context).pop();
+              },
+              child: const Text('Close'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                setState(() {
+                  _startQuiz(context.read<FlashcardData>().flashcards);
+                });
+              },
+              child: const Text('Try again'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    final flashcards = Provider.of<FlashcardData>(context).flashcards;
+    final flashcards = context.watch<FlashcardData>().flashcards;
 
-    if (flashcards.isEmpty) {
+    if (!_ready) {
       return Scaffold(
-        appBar: AppBar(
-          title: Text(
-            'Quiz',
-            style: TextStyle(fontSize: 28.0, fontWeight: FontWeight.bold, color: constantColors.Black),
-          ),
-          centerTitle: true,
-          leading: IconButton(
-            icon: Icon(Icons.arrow_back, color: constantColors.Black),
-            onPressed: () {
-              Navigator.pop(context);
-            },
+        appBar: AppBar(title: const Text('Quiz')),
+        body: const AppBackground(
+          child: Center(
+            child: CircularProgressIndicator(color: AppColors.softBlue),
           ),
         ),
-        body: Center(
-          child: Container(
-            height: MediaQuery.of(context).size.height,
-            padding: const EdgeInsets.all(16.0),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black26,
-                  blurRadius: 10.0,
-                  spreadRadius: 5.0,
+      );
+    }
+
+    if (flashcards.isEmpty || _quizCards.isEmpty) {
+      return Scaffold(
+        extendBodyBehindAppBar: true,
+        appBar: AppBar(title: const Text('Quiz')),
+        body: AppBackground(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(28),
+              child: Text(
+                'No flashcards available. Add some cards first, then come back to quiz.',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.nunito(
+                  fontSize: 16,
+                  height: 1.45,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.muted,
                 ),
-              ],
-            ),
-            child: Center(
-              child: const Text(
-                'No flashcards available.',
-                style: TextStyle(fontSize: 20.0),
               ),
             ),
           ),
@@ -64,198 +201,228 @@ class _QuizScreenState extends State<QuizScreen> {
       );
     }
 
-    void _showResultDialog(BuildContext context) {
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text('Quiz Completed'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text('Score: $_score / ${flashcards.length}'),
-                if (_wrongAnswers.isNotEmpty)
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: _wrongAnswers.map((answer) => Text(answer)).toList(),
-                  ),
-              ],
-            ),
-            actions: <Widget>[
-              TextButton(
-                child: Text('Close'),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-              ),
-              TextButton(
-                child: Text('Try Again'),
-                onPressed: () {
-                  setState(() {
-                    _currentIndex = 0;
-                    _score = 0;
-                    _wrongAnswers.clear();
-                    _controller.clear();
-                    Navigator.of(context).pop();
-                  });
-                },
-              ),
-            ],
-          );
-        },
-      );
-    }
-
-    void _submitAnswer() {
-      setState(() {
-        if (_controller.text.trim().toLowerCase() != flashcards[_currentIndex].answer.trim().toLowerCase()) {
-          _wrongAnswers.add('${flashcards[_currentIndex].question} ? \n - Correct Answer: ${flashcards[_currentIndex].answer}');
-        } else {
-          _score++;
-        }
-        _controller.clear();
-        if (_currentIndex < flashcards.length - 1) {
-          _currentIndex++;
-        } else {
-          _showAnswer = false;
-          _showResultDialog(context);
-        }
-      });
-    }
-
-    final flashcard = flashcards[_currentIndex];
+    final flashcard = _quizCards[_currentIndex];
+    final progress = (_currentIndex + 1) / _quizCards.length;
 
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: Text(
-          'Quiz',
-          style: TextStyle(fontSize: 28.0, fontWeight: FontWeight.bold, color: constantColors.Black),
-        ),
-        centerTitle: true,
-        backgroundColor: constantColors.SoftBlue,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: constantColors.Black),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
+        title: const Text('Quiz'),
       ),
-      body: Stack(
-        children: [
-          Expanded(
-            child: Container(
-              color: Colors.white,
-            ),
-          ),
-          Expanded(
-            child: Container(
-              height: 250,
-              decoration: BoxDecoration(
-                color: constantColors.SoftBlue,
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(50.0),
-                  bottomRight: Radius.circular(50.0),
+      body: AppBackground(
+        showDecor: false,
+        child: Stack(
+          children: [
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: Container(
+                height: 260,
+                decoration: const BoxDecoration(
+                  gradient: AppColors.quizHero,
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(42),
+                    bottomRight: Radius.circular(42),
+                  ),
                 ),
               ),
             ),
-          ),
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'Score: $_score / ${flashcards.length}',
-                        style: const TextStyle(fontSize: 24.0),
+            SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(18, 8, 18, 18),
+                child: Column(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(999),
+                      child: LinearProgressIndicator(
+                        value: progress,
+                        minHeight: 10,
+                        backgroundColor: AppColors.white.withValues(alpha: 0.35),
+                        color: AppColors.sun,
                       ),
-                      SizedBox(height: 20),
-                      Card(
-                        elevation: 4.0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16.0),
+                    ),
+                    const SizedBox(height: 18),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _StatChip(
+                            label: 'Score',
+                            value: '$_score / ${_quizCards.length}',
+                          ),
                         ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            children: [
-                              Text(
-                                'Question ${_currentIndex + 1}',
-                                style: const TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold, color: constantColors.Black),
-                              ),
-                              const SizedBox(height: 10.0),
-                              Text(
-                                flashcard.question,
-                                style: const TextStyle(fontSize: 24.0),
-                              ),
-                              const SizedBox(height: 20.0),
-                              TextField(
-                                controller: _controller,
-                                decoration: const InputDecoration(
-                                  labelText: 'Your Answer',
-                                  labelStyle: TextStyle(color: constantColors.Black),
-                                  enabledBorder: UnderlineInputBorder(
-                                    borderSide: BorderSide(color: Colors.green),
-                                  ),
-                                  focusedBorder: UnderlineInputBorder(
-                                    borderSide: BorderSide(color: Colors.blue),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: _StatChip(
+                            label: 'Card',
+                            value: '${_currentIndex + 1} / ${_quizCards.length}',
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 18),
+                    Expanded(
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 280),
+                        child: SingleChildScrollView(
+                          key: ValueKey(_currentIndex),
+                          child: Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(22),
+                            decoration: BoxDecoration(
+                              color: AppColors.white,
+                              borderRadius: BorderRadius.circular(28),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.ink.withValues(alpha: 0.12),
+                                  blurRadius: 24,
+                                  offset: const Offset(0, 14),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Text(
+                                  'QUESTION',
+                                  style: GoogleFonts.nunito(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: 1,
+                                    color: AppColors.deepTeal,
                                   ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 24.0),
-                      SizedBox(
-                        width: MediaQuery.of(context).size.width/2,
-                        child: ElevatedButton(
-                          onPressed: _submitAnswer,
-                          style: ElevatedButton.styleFrom(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16.0),
-
+                                const SizedBox(height: 10),
+                                Text(
+                                  flashcard.question,
+                                  style: GoogleFonts.fredoka(
+                                    fontSize: 26,
+                                    height: 1.3,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.ink,
+                                  ),
+                                ),
+                                const SizedBox(height: 24),
+                                TextField(
+                                  controller: _controller,
+                                  textInputAction: TextInputAction.done,
+                                  onSubmitted: (_) => _submitAnswer(),
+                                  style: GoogleFonts.nunito(
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                  decoration: InputDecoration(
+                                    labelText: 'Your answer',
+                                    filled: true,
+                                    fillColor: AppColors.mist,
+                                    prefixIcon: const Icon(Icons.edit_note_rounded),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                  ),
+                                ),
+                                AnimatedSize(
+                                  duration: const Duration(milliseconds: 220),
+                                  child: _showAnswer
+                                      ? Padding(
+                                          padding: const EdgeInsets.only(top: 18),
+                                          child: Container(
+                                            width: double.infinity,
+                                            padding: const EdgeInsets.all(14),
+                                            decoration: BoxDecoration(
+                                              color: AppColors.mint.withValues(alpha: 0.55),
+                                              borderRadius: BorderRadius.circular(16),
+                                            ),
+                                            child: Text(
+                                              'Answer: ${flashcard.answer}',
+                                              style: GoogleFonts.nunito(
+                                                fontSize: 17,
+                                                fontWeight: FontWeight.w800,
+                                                color: AppColors.ink,
+                                              ),
+                                            ),
+                                          ),
+                                        )
+                                      : const SizedBox.shrink(),
+                                ),
+                              ],
                             ),
-                            padding: const EdgeInsets.symmetric(vertical: 16.0),
                           ),
-                          child: const Text('Submit', style: TextStyle(color: constantColors.Black)),
                         ),
                       ),
-                      const SizedBox(height: 8.0),
-                      SizedBox(
-                        width: MediaQuery.of(context).size.width/2,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16.0),
-
-                            ),
-                            padding: const EdgeInsets.symmetric(vertical: 16.0),
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              _showAnswer = !_showAnswer;
-                            });
-                          },
-                          child: Text(_showAnswer ? 'Hide Answer' : 'Show Answer', style: TextStyle(color: constantColors.Black)),
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _submitAnswer,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.coral,
+                          foregroundColor: AppColors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
                         ),
+                        child: const Text('Submit'),
                       ),
-                      if (_showAnswer)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 8.0),
-                          child: Text(
-                            flashcard.answer,
-                            style: const TextStyle(fontSize: 20.0),
-                          ),
-                        ),
-                      const SizedBox(height: 50.0),
-                    ],
-                  ),
-                ],
+                    ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton(
+                        onPressed: () {
+                          setState(() {
+                            _showAnswer = !_showAnswer;
+                          });
+                        },
+                        child: Text(_showAnswer ? 'Hide answer' : 'Show answer'),
+                      ),
+                    ),
+                  ],
+                ),
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StatChip extends StatelessWidget {
+  const _StatChip({
+    required this.label,
+    required this.value,
+  });
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: AppColors.white.withValues(alpha: 0.22),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.white.withValues(alpha: 0.35)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: GoogleFonts.nunito(
+              color: AppColors.white.withValues(alpha: 0.85),
+              fontWeight: FontWeight.w700,
+              fontSize: 12,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            style: GoogleFonts.fredoka(
+              color: AppColors.white,
+              fontWeight: FontWeight.w600,
+              fontSize: 20,
             ),
           ),
         ],
